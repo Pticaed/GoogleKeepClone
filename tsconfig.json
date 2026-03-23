@@ -1,17 +1,42 @@
 {
-  "extends": "expo/tsconfig.base",
-  "compilerOptions": {
-    "strict": true,
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ]
+    "extends": "./node_modules/expo/tsconfig.base.json",
+    "compilerOptions": {
+        "strict": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        },
+        "moduleResolution": "bundler",
+        "module": "esnext",
+        "jsx": "react-native",
+        "lib": [
+            "DOM",
+            "ESNext"
+        ],
+        "noEmit": true,
+        "target": "ESNext",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "allowJs": true
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.tsx",
+        ".expo/types/**/*.ts",
+        "expo-env.d.ts",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "App.tsx",
+        "src/db/schema.js",
+        "src/db/client.jsx",
+        "src/api/mockApi.js"
+    ],
+    "exclude": [
+        "node_modules",
+        "babel.config.js",
+        "metro.config.js",
+        "drizzle"
+    ]
 }
