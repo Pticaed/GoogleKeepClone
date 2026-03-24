@@ -1,38 +1,28 @@
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
 import { IconButton } from "react-native-paper";
 
-export default function NoteCard({ title }) {
+export default function NoteCard({ title, onPress }) {
   const [hover, setHover] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [text, setText] = useState(title);
 
   return (
-    <>
-      {/* КАРТОЧКА */}
-      <View
-        style={styles.card}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        onClick={() => setOpen(true)}
-      >
-        {/* галочка */}
+    <Pressable
+      onPress={onPress}
+      onHoverIn={() => setHover(true)}
+      onHoverOut={() => setHover(false)}
+    >
+      <View style={styles.card}>
         {hover && (
           <View style={styles.check}>
             <IconButton icon="check" size={14} iconColor="white" />
           </View>
         )}
-
-        {/* pin */}
         {hover && (
           <View style={styles.pin}>
             <IconButton icon="pin-outline" size={18} />
           </View>
         )}
-
-        <Text style={styles.text}>{text}</Text>
-
-        {/* нижние иконки */}
+        <Text style={styles.text}>{title}</Text>
         {hover && (
           <View style={styles.icons}>
             <IconButton icon="palette-outline" size={18} />
@@ -43,43 +33,9 @@ export default function NoteCard({ title }) {
             <IconButton icon="dots-vertical" size={18} />
           </View>
         )}
+
       </View>
-
-      {/* МОДАЛКА */}
-      {open && (
-        <View style={styles.overlay}>
-          <View style={styles.modal}>
-            
-            <Text style={styles.modalTitle}>Название</Text>
-
-            {/* РЕДАКТИРОВАНИЕ */}
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              style={styles.input}
-              multiline
-            />
-
-            {/* иконки */}
-            <View style={styles.modalIcons}>
-              <IconButton icon="format-font" size={20} />
-              <IconButton icon="palette-outline" size={20} />
-              <IconButton icon="bell-outline" size={20} />
-              <IconButton icon="account-plus-outline" size={20} />
-              <IconButton icon="image-outline" size={20} />
-              <IconButton icon="archive-outline" size={20} />
-              <IconButton icon="dots-vertical" size={20} />
-            </View>
-
-            {/* закрыть */}
-            <Text style={styles.close} onPress={() => setOpen(false)}>
-              Закрыть
-            </Text>
-
-          </View>
-        </View>
-      )}
-    </>
+    </Pressable>
   );
 }
 
@@ -98,7 +54,6 @@ const styles = StyleSheet.create({
 
   text: {
     fontSize: 16,
-    color: "#000",
   },
 
   check: {
@@ -122,48 +77,5 @@ const styles = StyleSheet.create({
   icons: {
     flexDirection: "row",
     marginTop: "auto",
-  },
-
-  overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  modal: {
-    width: 500,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-  },
-
-  modalTitle: {
-    fontSize: 22,
-    marginBottom: 10,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    marginTop: 10,
-  },
-
-  modalIcons: {
-    flexDirection: "row",
-    marginTop: 20,
-  },
-
-  close: {
-    marginTop: 20,
-    textAlign: "right",
-    fontSize: 16,
   },
 });
