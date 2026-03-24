@@ -1,8 +1,20 @@
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
+import NoteCard from "../components/NoteCard";
 
-export default function Index() {
-    return (
-        <View>
-        </View>
-    );
+export default function Home() {
+  return (
+    <ScrollView style={{ backgroundColor: "#ffffff" }}>
+      <View
+        style={{
+          flexDirection: "row",  
+          flexWrap: "wrap",       
+          padding: 20,
+        }}
+      >
+        <NoteCard title="pppp" />
+        <NoteCard title="ллллллл" />
+      </View>
+
+    </ScrollView>
+  );
 }
