@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Drawer } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 export default function SideNav() {
@@ -26,7 +27,7 @@ export default function SideNav() {
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <Drawer.Section showDivider={false} style={styles.section} >
                 {drawerItem("Заметки", "bulb-outline", "notes")}
                 {drawerItem("Напоминания", "notifications-outline", "reminders")}
@@ -34,14 +35,13 @@ export default function SideNav() {
                 {drawerItem("Архив", "archive-outline", "archive")}
                 {drawerItem("Корзина", "trash-outline", "trash")}
             </Drawer.Section>
-        </View>
+        </SafeAreaView>
     );
 }
 
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         flexDirection: 'column',
         height: '100%',
         backgroundColor: '#fff',

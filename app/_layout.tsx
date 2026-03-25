@@ -1,21 +1,21 @@
 
-import SideNav from "@/src/components/SideNav";
+import SideNav from "@/src/components/navigation/SideNav";
 import { Stack } from "expo-router";
-import { StyleSheet, View } from "react-native";
-import KeepHeader from "../src/components/KeepHeader";
+import { View } from "react-native";
+import KeepHeader from "../src/components/navigation/KeepHeader";
 
 export default function RootLayout() {
   return (
-    <View>
+    <View style={{ flex: 1, flexDirection: "column" }}>
+      {/* Header */}
       <KeepHeader />
-      <SideNav />
-      
-      <View>
+
+      {/* Main area: SideNav + Stack */}
+      <View style={{ flex: 1, flexDirection: 'row' }}>
+        <SideNav  />
+
         <Stack screenOptions={{ headerShown: false }} />
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-});

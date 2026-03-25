@@ -1,7 +1,7 @@
-import { View, ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import { useState } from "react";
-import NoteCard from "../components/NoteCard";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { IconButton } from "react-native-paper";
+import NoteCard from "../components/NoteCard";
 
 export default function Home() {
   const [selected, setSelected] = useState(null);
