@@ -1,0 +1,37 @@
+import { Note, User } from "../db/schema";
+
+const BASE_URL = "https://69bd6d002bc2a25b22ae8c67.mockapi.io/api/v1";
+
+export const mockApi = {
+    getNotes: async (): Promise<Note[]> => {
+        const res = await fetch(`${BASE_URL}/notes`);
+        if (!res.ok) console.log("failed to fetch notes");
+        return await res.json();
+    },
+
+    getUsers: async (): Promise<User[]> => {
+        const res = await fetch(`${BASE_URL}/users`);
+        if (!res.ok) console.log("failed to fetch users");
+        return await res.json();
+    },
+
+    syncNote: async (note: Note): Promise<Note> => {
+        const res = await fetch(`${BASE_URL}/notes/${note.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(note)
+        });
+        if (!res.ok) console.log("failed to sync note");
+        return await res.json();
+    },
+
+    createNote: async (note: Partial<Note>): Promise<Note> => {
+        const res = await fetch(`${BASE_URL}/notes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(note)
+        });
+        if (!res.ok) console.log("failed to create note");
+        return await res.json();
+    }
+};
