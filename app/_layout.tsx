@@ -1,4 +1,5 @@
-import SideNav from "@/components/SideNav";
+
+import SideNav from "@/src/components/SideNav";
 import { Stack } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import KeepHeader from "../src/components/KeepHeader";
@@ -8,7 +9,7 @@ export default function RootLayout() {
     <View>
       <KeepHeader />
       <SideNav />
-
+      
       <View>
         <Stack screenOptions={{ headerShown: false }} />
       </View>
