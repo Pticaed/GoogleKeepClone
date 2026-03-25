@@ -25,6 +25,23 @@ export const mockApi = {
         return await res.json();
     },
 
+    updateNote: async (id: string, updates: Partial<Note>): Promise<Note> => {
+        const res = await fetch(`${BASE_URL}/notes/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updates)
+        });
+        if (!res.ok) console.log("failed to update note");
+        return await res.json();
+    },
+
+    deleteNote: async (id: string): Promise<void> => {
+        const res = await fetch(`${BASE_URL}/notes/${id}`, {
+            method: "DELETE"
+        });
+        if (!res.ok) console.log("failed to delete note");
+    },
+
     createNote: async (note: Partial<Note>): Promise<Note> => {
         const res = await fetch(`${BASE_URL}/notes`, {
             method: "POST",
