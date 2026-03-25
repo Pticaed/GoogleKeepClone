@@ -1,16 +1,20 @@
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import { Stack } from 'expo-router';
-import { Text, View } from "react-native";
-import migrations from "../drizzle/migrations";
-import { db } from "../src/db/client";
+import SideNav from "@/components/SideNav";
+import { Stack } from "expo-router";
+import { StyleSheet, View } from "react-native";
+import KeepHeader from "../src/components/KeepHeader";
 
 export default function RootLayout() {
-    const { success, error } = useMigrations(db, migrations);
+  return (
+    <View>
+      <KeepHeader />
+      <SideNav />
 
-    if (error) return <View><Text>migration error: {error.message}</Text></View>;
-    if (!success) return <View><Text>migration in progress...</Text></View>;
-
-    return (
-        <Stack />
-    );
+      <View>
+        <Stack screenOptions={{ headerShown: false }} />
+      </View>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+});
