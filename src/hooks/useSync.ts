@@ -1,40 +1,143 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { Platform } from "react-native";
 import { mockApi } from "../api/mockApi";
-import { db } from "../db/client";
-import { notes as notesTable } from "../db/schema";
+import { DbService } from "../services/DbService";
+
+const isWeb = Platform.OS === "web";
+
+const LocalStore = {
+    getNotes: async () => {
+        if (isWeb) {
+            const raw = localStorage.getItem("notes");
+            return raw ? JSON.parse(raw) : [];
+        }
+        return await DbService.getNotes();
+    },
+    insNote: async (note: any) => {
+        if (isWeb) {
+            const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+            notes.push(note);
+            localStorage.setItem("notes", JSON.stringify(notes));
+            return note;
+        }
+        return await DbService.insNote(note);
+    },
+    updNote: async (id: string, updates: any) => {
+        if (isWeb) {
+            const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+            const idx = notes.findIndex((n: any) => String(n.id) === id);
+            if (idx !== -1) notes[idx] = { ...notes[idx], ...updates };
+            localStorage.setItem("notes", JSON.stringify(notes));
+            return notes[idx] ?? null;
+        }
+        return await DbService.updNote(id, updates);
+    },
+    delNote: async (id: string) => {
+        if (isWeb) {
+            const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+            localStorage.setItem("notes", JSON.stringify(
+                notes.filter((n: any) => String(n.id) !== id)
+            ));
+            return;
+        }
+        return await DbService.delNote(id);
+    },
+};
+
+const mobileQueue: Record<string, string[]> = {};
+const PENDING_KEY = (userId: string) => `pending_deletions:${userId}`;
+
+export const PendingDel = {
+    get: (userId: string): string[] => {
+        if (isWeb) {
+            const raw = localStorage.getItem(PENDING_KEY(userId));
+            return raw ? JSON.parse(raw) : [];
+        }
+        return mobileQueue[userId] ?? [];
+    },
+    add: (userId: string, noteId: string) => {
+        const queue = PendingDel.get(userId);
+        if (!queue.includes(noteId)) {
+            queue.push(noteId);
+            if (isWeb) localStorage.setItem(PENDING_KEY(userId), JSON.stringify(queue));
+            else mobileQueue[userId] = queue;
+        }
+    },
+    remove: (userId: string, noteId: string) => {
+        const queue = PendingDel.get(userId).filter((id) => id !== noteId);
+        if (isWeb) localStorage.setItem(PENDING_KEY(userId), JSON.stringify(queue));
+        else mobileQueue[userId] = queue;
+    },
+    clear: (userId: string) => {
+        if (isWeb) localStorage.removeItem(PENDING_KEY(userId));
+        else delete mobileQueue[userId];
+    },
+};
 
 export const useSync = () => {
     const [isSyncing, setIsSyncing] = useState(false);
-    const [syncProblem, setSyncProblem] = useState(false);
+    const [forceOff, setforceOff] = useState(false);
 
-    const syncData = async () => {
-        if (!db) return;
+    const syncData = useCallback(async (userId?: string | number): Promise<void> => {
+        if (forceOff || !userId) return;
+        setIsSyncing(true);
         try {
-            setIsSyncing(true);
-            const localNotes = await db.select().from(notesTable);
-            const remoteNotes = await mockApi.getNotes();
+            const currentUserId = String(userId);
+            const localNotes = await LocalStore.getNotes();
+            const userLocal = localNotes.filter(
+                (n: any) => String(n.user_id) === currentUserId
+            );
 
-            for (const localNote of localNotes) {
-                const exists = remoteNotes.find((r: any) => r.id === localNote.id);
-                if (exists) {
-                    await mockApi.syncNote(localNote as any);
-                } else {
-                    await mockApi.createNote(localNote as any);
+            for (const temp of userLocal.filter((n: any) => String(n.id).startsWith("temp-"))) {
+                const { id: tempId, ...payload } = temp;
+                try {
+                    const serverNote = await mockApi.createNote({
+                        ...payload,
+                        user_id: currentUserId,
+                    });
+                    await LocalStore.delNote(tempId);
+                    await LocalStore.insNote({ ...serverNote, user_id: currentUserId });
+                } catch (e) { console.error(e); }
+            }
+
+            for (const id of PendingDel.get(currentUserId)) {
+                try {
+                    await mockApi.delNote(id);
+                    PendingDel.remove(currentUserId, id);
+                } catch (e) { console.error(e); }
+            }
+
+            const allRemote = await mockApi.getNotes();
+            const userRemote = allRemote.filter(
+                (n) => String(n.user_id) === currentUserId
+            );
+            const remoteIds = new Set(userRemote.map((rn) => String(rn.id)));
+            const freshLocal = await LocalStore.getNotes();
+
+            for (const ln of freshLocal) {
+                if (
+                    String(ln.user_id) === currentUserId &&
+                    !String(ln.id).startsWith("temp-") &&
+                    !remoteIds.has(String(ln.id))
+                ) {
+                    await LocalStore.delNote(String(ln.id));
                 }
             }
-            for (const remoteNote of remoteNotes) {
-                const existsLocally = localNotes.find((l) => l.id === remoteNote.id);
-                if (!existsLocally) {
-                    await db.insert(notesTable).values(remoteNote);
-                }
+
+            for (const rn of userRemote) {
+                const noteToSave = { ...rn, user_id: currentUserId };
+                const existing = freshLocal.find(
+                    (ln: any) => String(ln.id) === String(rn.id)
+                );
+                if (!existing) await LocalStore.insNote(noteToSave);
+                else await LocalStore.updNote(String(rn.id), noteToSave);
             }
-            console.log("sync completed");
         } catch (error) {
-            setSyncProblem(true);
-            console.error("error during sync:", error);
+            console.error("sync failed:", error);
         } finally {
             setIsSyncing(false);
         }
-    };
-    return { syncData, isSyncing, syncProblem };
+    }, [forceOff]);
+
+    return { syncData, isSyncing, forceOff, setforceOff };
 };

@@ -6,7 +6,7 @@ export const mockApi = {
     getUsers: async (): Promise<User[]> => {
         const res = await fetch(`${BASE_URL}/users`);
         if (!res.ok) console.log("failed to fetch users");
-        return await res.json();
+        return await res.json() as User[];
     },
 
     createUser: async (user: Partial<User>): Promise<User> => {
@@ -16,7 +16,7 @@ export const mockApi = {
             body: JSON.stringify(user)
         });
         if (!res.ok) console.log("failed to create user");
-        return await res.json();
+        return await res.json() as User;
     },
 
     updateUser: async (id: string, updates: Partial<User>): Promise<User> => {
@@ -26,10 +26,10 @@ export const mockApi = {
             body: JSON.stringify(updates)
         });
         if (!res.ok) console.log("failed to update user");
-        return await res.json();
+        return await res.json() as User;
     },
 
-    deleteUser: async (id: string): Promise<void> => {
+    delUser: async (id: string): Promise<void> => {
         const res = await fetch(`${BASE_URL}/users/${id}`, {
             method: "DELETE"
         });
@@ -39,7 +39,7 @@ export const mockApi = {
     getNotes: async (): Promise<Note[]> => {
         const res = await fetch(`${BASE_URL}/notes`);
         if (!res.ok) console.log("failed to fetch notes");
-        return await res.json();
+        return await res.json() as Note[];
     },
 
     syncNote: async (note: Note): Promise<Note> => {
@@ -49,23 +49,25 @@ export const mockApi = {
             body: JSON.stringify(note)
         });
         if (!res.ok) console.log("failed to sync note");
-        return await res.json();
+        return await res.json() as Note;
     },
 
-    updateNote: async (id: string, updates: Partial<Note>): Promise<Note> => {
+    updNote: async (id: string, updates: Partial<Note>): Promise<Note> => {
         const res = await fetch(`${BASE_URL}/notes/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updates)
         });
         if (!res.ok) console.log("failed to update note");
-        return await res.json();
+        return await res.json() as Note;
     },
 
-    deleteNote: async (id: string): Promise<void> => {
+    delNote: async (id: string): Promise<void> => {
+        console.log("Deleting note with id:", id);
         const res = await fetch(`${BASE_URL}/notes/${id}`, {
             method: "DELETE"
         });
+        console.log("Delete response status:", res.status);
         if (!res.ok) console.log("failed to delete note");
     },
 
@@ -76,6 +78,6 @@ export const mockApi = {
             body: JSON.stringify(note)
         });
         if (!res.ok) console.log("failed to create note");
-        return await res.json();
+        return await res.json() as Note;
     }
 };
