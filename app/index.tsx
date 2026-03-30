@@ -1,4 +1,5 @@
 
+import NoteInput from "@/src/components/notes/noteInput";
 import { eq } from "drizzle-orm";
 import { useEffect, useState } from "react";
 import { Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -45,7 +46,9 @@ export default function Home() {
     };
 
     return (
+        
         <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+            <NoteInput />
             <Banner visible={banner} actions={[{ label: "OK", onPress: () => setBanner(false) }]}>
                 Offline mode
             </Banner>
