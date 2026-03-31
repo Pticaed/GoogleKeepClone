@@ -142,10 +142,55 @@ export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         finally { setLoading(false); }
     };
 
+    const register = async (
+    email: string,
+    username: string,
+    password: string
+    ) => {
+        setLoading(true);
+
+        try {
+            const users = await mockApi.getUsers();
+
+            const exists = users.find(
+            u => u.username === username || u.email === email
+            );
+
+            if (exists) {
+            return { success: false, error: "User already exists" };
+            }
+
+            const newUser: User = {
+            id: makeId(),
+            email,
+            username,
+            password,
+            avatar_url: null,
+            theme: "light",
+            label_definitions: null,
+            created_at: new Date().toISOString(),
+            };
+
+            // mock backend
+            await mockApi.createUser?.(newUser);
+
+            await Auth.save(newUser, password);
+
+            setUser(newUser);
+            setNotes([]);
+
+            return { success: true };
+        } catch (e) {
+            return { success: false };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <GlobalContext.Provider value={{
             notes, user, isLoading: isLoading || isSyncing, isOnline: !forceOff,
-            forceOff, setforceOff, addNote, removeNote, login,
+            forceOff, setforceOff, addNote, removeNote, login, register,
             sync: () => syncData(user?.id),
             logout: async () => {
                 await Auth.clear();

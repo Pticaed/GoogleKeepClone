@@ -1,5 +1,5 @@
 
-import NoteInput from "@/src/components/notes/noteInput";
+import NoteInput from "@/components/notes/noteInput";
 import { eq } from "drizzle-orm";
 import { uuid } from "drizzle-orm/gel-core";
 import { useEffect, useState } from "react";
