@@ -1,6 +1,7 @@
 
 import NoteInput from "@/src/components/notes/noteInput";
 import { eq } from "drizzle-orm";
+import { uuid } from "drizzle-orm/gel-core";
 import { useEffect, useState } from "react";
 import { Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Banner, Button, IconButton, useTheme } from "react-native-paper";
@@ -44,11 +45,23 @@ export default function Home() {
         } catch (e) { console.log(e); }
         setSelected(null);
     };
+    const createNote = async (title: string, text: string) => {
+        const newNote = { id: uuid(), title, text };
+        setNotes([newNote, ...notes]);
+        // try {
+        //     if (Platform.OS !== "web" && db) {
+        //         await db.insert(notesTable).values(newNote);
+        //     } else {
+        //         await mockApi.createNote(newNote);
+        //     }
+        // } catch (e) { console.log(e); }
+    }
+    
 
     return (
         
         <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-            <NoteInput />
+            <NoteInput newNoteMethod={createNote} />
             <Banner visible={banner} actions={[{ label: "OK", onPress: () => setBanner(false) }]}>
                 Offline mode
             </Banner>

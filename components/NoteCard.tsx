@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { IconButton } from "react-native-paper";
 
-export default function NoteCard({ title, onPress }) {
+export default function NoteCard({ title, onPress }: { title: string; onPress: () => void }) {
   const [hover, setHover] = useState(false);
 
   return (
@@ -41,6 +41,12 @@ export default function NoteCard({ title, onPress }) {
 
 const styles = StyleSheet.create({
   card: {
+    
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.3, 
+    shadowRadius: 6, 
+
+    elevation: 6, 
     width: 320,
     minHeight: 140,
     margin: 12,
@@ -51,7 +57,6 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     position: "relative",
   },
-
   text: {
     fontSize: 16,
   },

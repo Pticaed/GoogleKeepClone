@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { IconButton, Surface } from 'react-native-paper';
 
-const GoogleKeepNote = () => {
+const GoogleKeepNote = (props: { newNoteMethod: (title: string, text: string) => void }) => {
   const [isEditing, setIsEditing] = useState(false);
-
+  const [title, setTitle] = useState("");
+  const [text, setText] = useState("");
   return (
     <View style={styles.screen}>
-      {/* Контейнер для центрирования на больших экранах */}
       <View style={styles.wrapper}>
         {!isEditing ? (
-          /* --- СВЁРНУТЫЙ ВИД --- */
           <Surface style={styles.collapsedCard} elevation={2}>
             <Pressable 
               style={styles.pressableArea} 
@@ -25,7 +24,6 @@ const GoogleKeepNote = () => {
             </View>
           </Surface>
         ) : (
-          /* --- РАЗВЁРНУТЫЙ ВИД --- */
           <Surface style={styles.expandedCard} elevation={4}>
             <View style={styles.header}>
               <TextInput
@@ -33,6 +31,8 @@ const GoogleKeepNote = () => {
                 placeholderTextColor="#757575"
                 style={styles.titleInput}
                 autoFocus
+                value={title}
+                onChangeText={setTitle}
               />
               <IconButton icon="pin-outline" size={22} />
             </View>
@@ -42,6 +42,8 @@ const GoogleKeepNote = () => {
               placeholderTextColor="#757575"
               multiline
               style={styles.noteInput}
+              value={text}
+              onChangeText={setText}
             />
 
             <View style={styles.footer}>
@@ -60,7 +62,7 @@ const GoogleKeepNote = () => {
                 onPress={() => setIsEditing(false)} 
                 style={styles.closeButton}
               >
-                <Text style={styles.closeButtonText}>Закрыть</Text>
+                <Text style={styles.closeButtonText} onPress={() => {if(!text || !title) return; props.newNoteMethod(title, text); setIsEditing(false); setText(""); setTitle(""); }}>Закрыть</Text>
               </Pressable>
             </View>
           </Surface>
