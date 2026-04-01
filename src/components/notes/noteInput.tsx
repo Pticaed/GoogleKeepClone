@@ -1,6 +1,6 @@
 import { useGlobal } from '@/context/GlobalContext';
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { IconButton, Surface } from 'react-native-paper';
 
 const COLORS: any = {
@@ -13,7 +13,16 @@ const COLORS: any = {
     purple: { bg: '#d7aefb', b: '#c496e8', dbg: '#42275e', db: '#42275e' },
 };
 
-const EMPTY = { title: '', content: '', color: 'default', is_pinned: false, is_archived: false, reminder_at: null, labels: null, checklist: null };
+const EMPTY = { 
+    title: '', 
+    content: '', 
+    color: 'default', 
+    is_pinned: false, 
+    is_archived: false, 
+    reminder_at: null, 
+    labels: null, 
+    checklist: null 
+};
 
 interface Props { existingNote?: any; onClose?: () => void; }
 
@@ -25,6 +34,8 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
     const [note, setNote] = useState(existingNote ?? { ...EMPTY });
     const [expanded, setExpanded] = useState(isEditing);
     const [colorMenu, setColorMenu] = useState(false);
+    const [reminderMenu, setReminderMenu] = useState(false);
+    const [tempReminder, setTempReminder] = useState<string>('');
     const [history, setHistory] = useState({ items: [{ title: note.title, content: note.content }], index: 0 });
 
     useEffect(() => {
@@ -35,6 +46,20 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
         }), 1000);
         return () => clearTimeout(t);
     }, [note.title, note.content]);
+
+    // Форматування дати для відображення
+    const formatReminder = (iso: string | null) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        const isTomorrow = d.toDateString() === new Date(now.getTime() + 86400000).toDateString();
+        
+        const time = d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        if (isToday) return `Сьогодні, ${time}`;
+        if (isTomorrow) return `Завтра, ${time}`;
+        return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }) + `, ${time}`;
+    };
 
     const c = COLORS[note.color] || COLORS.default;
     const tc = isDark ? '#e8eaed' : '#202124';
@@ -47,7 +72,7 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
         reset();
     };
 
-    const reset = () => { setNote({ ...EMPTY }); setExpanded(false); setColorMenu(false); onClose?.(); };
+    const reset = () => { setNote({ ...EMPTY }); setExpanded(false); setColorMenu(false); setReminderMenu(false); onClose?.(); };
 
     const setFlag = (key: string, val: boolean) => {
         const updated = { ...note, [key]: val };
@@ -55,8 +80,15 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
         if (isEditing) updateNote(existingNote.id, { [key]: val });
     };
 
-    const Btn = ({ icon, onPress, active = false, disabled = false, color }: any) => (
-        <IconButton icon={icon} size={20} onPress={onPress} disabled={disabled} style={{ margin: 0 }}
+    const setReminder = (value: string | null) => {
+        const updated = { ...note, reminder_at: value };
+        setNote(updated);
+        if (isEditing) updateNote(existingNote.id, { reminder_at: value });
+        setReminderMenu(false);
+    };
+
+    const Btn = ({ icon, onPress, active = false, disabled = false, color, size = 20 }: any) => (
+        <IconButton icon={icon} size={size} onPress={onPress} disabled={disabled} style={{ margin: 0 }}
             iconColor={color ?? (active ? '#1a73e8' : disabled ? '#5f6368' : isDark ? '#e8eaed' : '#5f6368')} />
     );
 
@@ -73,6 +105,61 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
         </Modal>
     );
 
+    const ReminderPicker = () => {
+        const presets = [
+            { label: 'Через 1 годину', value: new Date(Date.now() + 3600000).toISOString() },
+            { label: 'Сьогодні ввечері', value: new Date(new Date().setHours(20, 0, 0, 0)).toISOString() },
+            { label: 'Завтра', value: new Date(new Date().setHours(new Date().getHours() + 24, 9, 0, 0)).toISOString() },
+            { label: 'Наступного тижня', value: new Date(Date.now() + 7 * 86400000).toISOString() },
+        ];
+
+        return (
+            <Modal transparent visible={reminderMenu} animationType="fade">
+                <Pressable style={s.overlay} onPress={() => setReminderMenu(false)}>
+                    <View style={[s.popup, { backgroundColor: isDark ? '#2c2c2c' : '#fff', width: 300 }]}>
+                        <Text style={[s.popupTitle, { color: tc }]}>Вибрати нагадування</Text>
+                        
+                        {/* Пресети */}
+                        {presets.map((p, i) => (
+                            <Pressable key={i} style={s.presetBtn} onPress={() => setReminder(p.value)}>
+                                <Text style={{ color: tc }}>{p.label}</Text>
+                            </Pressable>
+                        ))}
+                        
+                        {/* Нативний input для точної дати (працює на вебі) */}
+                        {Platform.OS === 'web' && (
+                            <>
+                                <Text style={[s.popupSub, { color: '#9aa0a6' }]}>Або оберіть дату:</Text>
+                                <input 
+                                    type="datetime-local" 
+                                    onChange={(e) => setTempReminder(new Date(e.target.value).toISOString())}
+                                    style={{ padding: 8, marginBottom: 8, borderRadius: 4, border: '1px solid #ccc' }}
+                                />
+                                <Pressable 
+                                    style={[s.presetBtn, { backgroundColor: '#1a73e8' }]} 
+                                    onPress={() => tempReminder && setReminder(tempReminder)}
+                                >
+                                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Підтвердити</Text>
+                                </Pressable>
+                            </>
+                        )}
+                        
+                        {/* Кнопка видалення нагадування */}
+                        {note.reminder_at && (
+                            <Pressable 
+                                style={[s.presetBtn, { backgroundColor: '#ea4335', marginTop: 8 }]} 
+                                onPress={() => setReminder(null)}
+                            >
+                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Видалити нагадування</Text>
+                            </Pressable>
+                        )}
+                    </View>
+                </Pressable>
+            </Modal>
+        );
+    };
+
+    // Скорочений режим (тільки заголовок)
     if (!expanded && !isEditing) return (
         <Surface style={[s.card, { height: 48, flexDirection: 'row', backgroundColor: bg, borderColor: bc }]} elevation={2}>
             <Pressable style={{ flex: 1 }} onPress={() => setExpanded(true)}>
@@ -86,13 +173,28 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
         </Surface>
     );
 
+    // Розгорнутий режим (редагування)
     return (
         <Surface style={[s.card, { backgroundColor: bg, borderColor: bc }]} elevation={4}>
             <View style={s.row}>
                 <TextInput placeholder="Назва" placeholderTextColor="#9aa0a6" style={[s.titleInput, { color: tc }]}
                     value={note.title} onChangeText={v => setNote({ ...note, title: v })} />
-                <Btn icon={note.is_pinned ? 'pin' : 'pin-outline'} active={note.is_pinned} onPress={() => setFlag('is_pinned', !note.is_pinned)} />
+                <View style={{ flexDirection: 'row' }}>
+                    <Btn icon={note.is_pinned ? 'pin' : 'pin-outline'} active={note.is_pinned} onPress={() => setFlag('is_pinned', !note.is_pinned)} />
+                    <Btn icon={note.reminder_at ? "bell-ring" : "bell-outline"} active={!!note.reminder_at} onPress={() => setReminderMenu(true)} />
+                </View>
             </View>
+
+            {/* Відображення нагадування під заголовком */}
+            {note.reminder_at && (
+                <View style={s.reminderChip}>
+                    <IconButton icon="bell-ring" size={14} iconColor="#1a73e8" style={{ margin: 0 }} />
+                    <Text style={[s.reminderText, { color: '#1a73e8' }]}>{formatReminder(note.reminder_at)}</Text>
+                    <Pressable onPress={() => setReminder(null)} style={{ marginLeft: 4 }}>
+                        <Text style={{ color: '#ea4335', fontSize: 12 }}>✕</Text>
+                    </Pressable>
+                </View>
+            )}
 
             <TextInput placeholder="Замітка..." placeholderTextColor="#9aa0a6" multiline
                 style={[s.contentInput, { color: tc }]} value={note.content} onChangeText={v => setNote({ ...note, content: v })} />
@@ -100,6 +202,7 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
             <View style={s.footer}>
                 <View style={s.tools}>
                     <Btn icon="palette-outline" onPress={() => setColorMenu(true)} />
+                    <Btn icon="bell-outline" onPress={() => setReminderMenu(true)} />
                     <Btn icon="undo" disabled={history.index <= 0} onPress={() => {
                         const item = history.items[history.index - 1];
                         if (item) { setNote({ ...note, ...item }); setHistory({ ...history, index: history.index - 1 }); }
@@ -110,19 +213,25 @@ export default function GoogleKeepNote({ existingNote, onClose }: Props) {
             </View>
 
             <ColorPicker />
+            <ReminderPicker />
         </Surface>
     );
 }
 
 const s = StyleSheet.create({
     card: { margin: 16, padding: 8, borderRadius: 8, borderWidth: 1 },
-    row: { flexDirection: 'row', alignItems: 'center' },
+    row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     titleInput: { flex: 1, fontSize: 18, fontWeight: '700', padding: 8 },
     contentInput: { fontSize: 15, padding: 8, minHeight: 80, textAlignVertical: 'top' },
     footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
     tools: { flexDirection: 'row', gap: 4 },
     closeBtn: { padding: 8, fontWeight: 'bold' },
     overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' },
-    popup: { padding: 16, borderRadius: 12, flexDirection: 'row', flexWrap: 'wrap', width: 280, gap: 12 },
+    popup: { padding: 16, borderRadius: 12, flexDirection: 'column', width: 280, gap: 8 },
+    popupTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+    popupSub: { fontSize: 12, marginTop: 8, marginBottom: 4 },
+    presetBtn: { padding: 12, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.05)' },
     dot: { width: 40, height: 40, borderRadius: 20 },
+    reminderChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, marginLeft: 4 },
+    reminderText: { fontSize: 13, fontWeight: '500' },
 });

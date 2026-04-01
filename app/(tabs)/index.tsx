@@ -12,7 +12,17 @@ export default function NotesScreen() {
   const [selected, setSelected] = useState<any>(null);
 
   const isDark = theme === 'dark';
-  const visibleNotes = notes.filter((n: any) => !n.is_archived && !n.is_deleted);
+  
+  // 1. Фільтруємо: показуємо тільки активні нотатки
+  // 2. Сортуємо: закріплені (true) завжди йдуть перед незакріпленими (false)
+  const visibleNotes = notes
+    .filter((n: any) => !n.is_archived && !n.is_deleted)
+    .sort((a: any, b: any) => {
+      // Якщо обидві нотатки мають однаковий статус закріплення - порядок не змінюємо
+      if (a.is_pinned === b.is_pinned) return 0;
+      // Якщо a закріплена (true), вона має бути вище (повертаємо -1)
+      return a.is_pinned ? -1 : 1;
+    });
 
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? '#121212' : '#fff' }}>
@@ -30,6 +40,7 @@ export default function NotesScreen() {
                 onArchive={(id: string) => updateNote(id, { is_archived: true })}
                 onDelete={(id: string) => removeNote(id)}
                 onPin={(id: string) => updateNote(id, { is_pinned: !note.is_pinned })}
+                onRemoveReminder={(id: string) => updateNote(id, { reminder_at: null })} // ← НОВА ПРОПС
               />
             </View>
           ))}
@@ -55,7 +66,6 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     // 2 колонки на мобах, 3+ на планшетах
-    width: width > 700 ? '31.3%' : '48%', 
     margin: '1%',
   },
 });
