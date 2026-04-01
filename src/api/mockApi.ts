@@ -35,7 +35,6 @@ export const mockApi = {
         });
         if (!res.ok) console.log("failed to delete user");
     },
-
     getNotes: async (): Promise<Note[]> => {
         const res = await fetch(`${BASE_URL}/notes`);
         if (!res.ok) console.log("failed to fetch notes");
