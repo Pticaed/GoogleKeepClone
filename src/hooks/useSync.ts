@@ -25,7 +25,7 @@ const LocalStore = {
     updNote: async (id: string, updates: any) => {
         if (isWeb) {
             const notes = JSON.parse(localStorage.getItem("notes") || "[]");
-            const idx = notes.findIndex((n: any) => String(n.id) === id);
+            const idx = notes.findIndex((n: any) => String(n.id) === String(id));
             if (idx !== -1) notes[idx] = { ...notes[idx], ...updates };
             localStorage.setItem("notes", JSON.stringify(notes));
             return notes[idx] ?? null;
@@ -36,7 +36,7 @@ const LocalStore = {
         if (isWeb) {
             const notes = JSON.parse(localStorage.getItem("notes") || "[]");
             localStorage.setItem("notes", JSON.stringify(
-                notes.filter((n: any) => String(n.id) !== id)
+                notes.filter((n: any) => String(n.id) !== String(id))
             ));
             return;
         }
@@ -64,7 +64,7 @@ export const PendingDel = {
         }
     },
     remove: (userId: string, noteId: string) => {
-        const queue = PendingDel.get(userId).filter((id) => id !== noteId);
+        const queue = PendingDel.get(userId).filter((id) => String(id) !== String(noteId));
         if (isWeb) localStorage.setItem(PENDING_KEY(userId), JSON.stringify(queue));
         else mobileQueue[userId] = queue;
     },
@@ -93,6 +93,7 @@ export const useSync = () => {
                 try {
                     const serverNote = await mockApi.createNote({
                         ...payload,
+                        id: undefined,
                         user_id: currentUserId,
                     });
                     await LocalStore.delNote(tempId);
@@ -115,12 +116,13 @@ export const useSync = () => {
             const freshLocal = await LocalStore.getNotes();
 
             for (const ln of freshLocal) {
+                const lid = String(ln.id);
                 if (
                     String(ln.user_id) === currentUserId &&
-                    !String(ln.id).startsWith("temp-") &&
-                    !remoteIds.has(String(ln.id))
+                    !lid.startsWith("temp-") &&
+                    !remoteIds.has(lid)
                 ) {
-                    await LocalStore.delNote(String(ln.id));
+                    await LocalStore.delNote(lid);
                 }
             }
 
@@ -140,4 +142,4 @@ export const useSync = () => {
     }, [forceOff]);
 
     return { syncData, isSyncing, forceOff, setforceOff };
-};
+};  

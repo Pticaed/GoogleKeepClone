@@ -6,7 +6,7 @@ export const users = sqliteTable("users", {
     password: text("password").notNull(),
     username: text("username").notNull(),
     avatar_url: text("avatar_url"),
-    theme: text("theme").default("light"),
+    theme: text("theme").$type<"light" | "dark">().default("light"), 
     label_definitions: text("label_definitions"),
     created_at: text("created_at").notNull(),
 });

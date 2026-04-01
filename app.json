@@ -42,7 +42,10 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": true,
+      "router": {
+        "origin": false
+      }
     }
   }
 }
